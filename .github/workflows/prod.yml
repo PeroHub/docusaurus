@@ -1,0 +1,38 @@
+name: Timbu Docs - Prod
+
+on:
+  push:
+    branches: [prod]
+
+jobs:
+  build:
+    runs-on: tim-server
+    strategy:
+      matrix:
+        node-version: [18.x]
+    defaults:
+      run:
+        working-directory: /var/www/timbu/prod/docs
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup nodejs
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: Get repository
+        run: |
+          git stash
+          git pull origin prod
+      - name: install Dependencies
+        run: npm install
+      - name: build static files
+        run: npm run build
+        env:
+          CI: false
+      - name: Start nodejs server
+        run: sudo systemctl restart timbuproddocs
+      # - name: Semantic Release
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   run: npm run release
